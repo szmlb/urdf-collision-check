@@ -184,5 +184,42 @@ class TestTrajectoryCollision(TestCollisionChecker):
         if os.path.exists(temp_output_path):
             os.remove(temp_output_path)
 
+    def test_l_shape_sphere_no_collision_concave_area(self):
+        # Define paths for test files
+        urdf1_path = self.rel_path_urdf("l_shape.urdf")
+        urdf2_path = self.rel_path_urdf("sphere.urdf")
+        traj1_path = self.rel_path_test_data("l_shape_stationary_origin.csv")
+        traj2_path = self.rel_path_test_data("sphere_in_l_elbow_no_collision.csv")
+
+        temp_output_filename = "temp_l_sphere_noncoll_output.csv"
+        temp_output_path = self.rel_path_test_data(temp_output_filename)
+        expected_output_path = self.rel_path_test_data("expected_l_sphere_noncoll_results.csv")
+
+        # Create mock args for run_trajectory_collision_analysis
+        mock_args = argparse.Namespace(
+            urdf_file_1=urdf1_path,
+            urdf_file_2=urdf2_path,
+            traj1=traj1_path,
+            traj2=traj2_path,
+            output=temp_output_path,
+            visualize=False # Ensure tests run in non-GUI mode
+        )
+
+        # Run the trajectory collision analysis
+        results = run_trajectory_collision_analysis(mock_args, self.physics_client_id)
+        self.assertTrue(results, "run_trajectory_collision_analysis returned no results for L-shape/sphere test.")
+
+        # Write the results to the temporary output file
+        write_results_to_csv(results, temp_output_path)
+
+        # Compare the temporary output with the expected output
+        self.assertTrue(os.path.exists(temp_output_path), f"Temporary output file {temp_output_path} was not created for L-shape/sphere test.")
+        # Using the same compare_csv_files helper, tolerance for distance is built-in.
+        self.compare_csv_files(expected_output_path, temp_output_path)
+
+        # Clean up the temporary output file
+        if os.path.exists(temp_output_path):
+            os.remove(temp_output_path)
+
 if __name__ == '__main__':
     unittest.main(argv=['first-arg-is-ignored'], exit=False)
