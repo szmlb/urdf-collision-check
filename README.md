@@ -11,6 +11,7 @@ This project provides a command-line tool to check for collisions between two ro
 *   Detects collisions between the specified models.
 *   Calculates and reports the minimum distance between the two models.
 *   Supports non-convex shapes for collision detection, provided they are defined as mesh geometries within the URDF's `<collision>` tag.
+*   Optional GUI visualization of the scene and objects.
 
 ## Requirements
 
@@ -36,7 +37,7 @@ The script is run from the command line with paths to the two URDF files and opt
 ### Syntax
 
 ```bash
-python collision_checker.py <urdf_file_1> <urdf_file_2> [--pos1 X Y Z] [--orn1 QX QY QZ QW] [--pos2 X Y Z] [--orn2 QX QY QZ QW]
+python collision_checker.py <urdf_file_1> <urdf_file_2> [--pos1 X Y Z] [--orn1 QX QY QZ QW] [--pos2 X Y Z] [--orn2 QX QY QZ QW] [--visualize]
 ```
 
 ### Arguments
@@ -47,6 +48,7 @@ python collision_checker.py <urdf_file_1> <urdf_file_2> [--pos1 X Y Z] [--orn1 Q
 *   `--orn1 QX QY QZ QW`: (Optional) Orientation (quaternion X, Y, Z, W) for the first object. Defaults to `0 0 0 1` (no rotation).
 *   `--pos2 X Y Z`: (Optional) Position for the second object. Defaults to `0 0 0`.
 *   `--orn2 QX QY QZ QW`: (Optional) Orientation (quaternion) for the second object. Defaults to `0 0 0 1`.
+*   `--visualize`: (Optional) If set, enables GUI visualization of the URDFs and collision check. The PyBullet window will open and display the scene. Close the window to exit the program after visualization.
 
 ### Examples
 

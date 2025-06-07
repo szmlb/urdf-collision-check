@@ -80,10 +80,19 @@ if __name__ == '__main__':
                       help="Position (X Y Z) for the second URDF model. Default: 0 0 0")
   parser.add_argument("--orn2", nargs=4, type=float, default=[0.0, 0.0, 0.0, 1.0],
                       help="Orientation quaternion (X Y Z W) for the second URDF model. Default: 0 0 0 1")
+  parser.add_argument('--visualize', action='store_true', help='Enable GUI visualization of the URDFs and collision check.')
 
   args = parser.parse_args()
 
-  physics_client_id = p.connect(p.DIRECT) # Main script connects once
+  # Connect to PyBullet: p.GUI if visualize flag is set, otherwise p.DIRECT
+  connection_mode = p.GUI if args.visualize else p.DIRECT
+  physics_client_id = p.connect(connection_mode) # Main script connects once
+
+  if args.visualize:
+      # You might want to configure the camera or add other GUI elements here
+      # For example, set a camera distance and orientation
+      p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=50, cameraPitch=-35, cameraTargetPosition=[0.5,0.5,0.5], physicsClientId=physics_client_id)
+      print("GUI visualization enabled. Close the PyBullet window to exit.")
 
   try:
     # Call the refactored logic function
@@ -102,6 +111,18 @@ if __name__ == '__main__':
     else:
       print("No collision detected.")
     print(f"Closest distance: {closest_distance:.4f} units")
+
+    if args.visualize:
+      print("\nGUI mode active. Close the PyBullet window to exit or press Ctrl+C in terminal.")
+      try:
+        while p.isConnected(physics_client_id):
+          # p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING) # Optional
+          p.stepSimulation(physicsClientId=physics_client_id)
+          # time.sleep(1./240.) # Keep this commented unless specific sim frequency is needed
+      except p.error:
+        # This exception can occur if the window is closed by the user
+        print("PyBullet window closed by user.")
+      # The main finally block will handle disconnection.
 
   except Exception as e:
     print(f"An error occurred: {e}")
