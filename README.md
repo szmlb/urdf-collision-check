@@ -2,16 +2,17 @@
 
 ## Project Overview
 
-This project provides a command-line tool to check for collisions between two robotic links or objects defined by URDF (Unified Robot Description Format) files. It loads the two specified URDF models into a PyBullet physics simulation, sets their positions and orientations as provided by the user, and then performs a collision check. The tool reports whether a collision is detected and also provides the closest distance between the two objects.
+This project provides a command-line tool to check for collisions between two URDF (Unified Robot Description Format) objects over time. It loads two URDF models and their corresponding trajectory data from CSV files. For each synchronized timestamp across both trajectories, it updates the objects' poses in a PyBullet physics simulation and performs a collision check. The results, including collision status and closest distance at each timestamp, are saved to an output CSV file. Optional GUI visualization allows for observing the objects' motion and collision states.
 
 ## Features
 
 *   Loads two URDF models.
-*   Allows user to specify the 3D position (X, Y, Z) and orientation (quaternion X, Y, Z, W) for each model via command-line arguments.
-*   Detects collisions between the specified models.
-*   Calculates and reports the minimum distance between the two models.
-*   Supports non-convex shapes for collision detection, provided they are defined as mesh geometries within the URDF's `<collision>` tag.
-*   Optional GUI visualization of the scene and objects.
+*   Processes trajectories of poses for each object from user-provided CSV files.
+*   Synchronizes poses based on timestamps and checks for collisions at each step.
+*   Calculates and reports the minimum distance between the models at each timestamp.
+*   Outputs a CSV file detailing the collision status (is_collision, closest_distance) over time.
+*   Supports non-convex shapes for collision detection (via mesh geometries in URDF).
+*   Optional GUI visualization of the scene, object movements, and collision checks.
 
 ## Requirements
 
@@ -32,36 +33,49 @@ This project provides a command-line tool to check for collisions between two ro
 
 ## Usage
 
-The script is run from the command line with paths to the two URDF files and optional arguments for their poses.
+The script is run from the command line, requiring paths to two URDF files, two trajectory CSV files, and an output CSV file path.
 
 ### Syntax
 
 ```bash
-python collision_checker.py <urdf_file_1> <urdf_file_2> [--pos1 X Y Z] [--orn1 QX QY QZ QW] [--pos2 X Y Z] [--orn2 QX QY QZ QW] [--visualize]
+python collision_checker.py <urdf_file_1> <urdf_file_2> --traj1 <path_to_traj1.csv> --traj2 <path_to_traj2.csv> --output <path_to_output.csv> [--visualize]
 ```
 
 ### Arguments
 
 *   `urdf_file_1`: Path to the first URDF file.
 *   `urdf_file_2`: Path to the second URDF file.
-*   `--pos1 X Y Z`: (Optional) Position (X, Y, Z coordinates) for the first object. Defaults to `0 0 0`.
-*   `--orn1 QX QY QZ QW`: (Optional) Orientation (quaternion X, Y, Z, W) for the first object. Defaults to `0 0 0 1` (no rotation).
-*   `--pos2 X Y Z`: (Optional) Position for the second object. Defaults to `0 0 0`.
-*   `--orn2 QX QY QZ QW`: (Optional) Orientation (quaternion) for the second object. Defaults to `0 0 0 1`.
-*   `--visualize`: (Optional) If set, enables GUI visualization of the URDFs and collision check. The PyBullet window will open and display the scene. Close the window to exit the program after visualization.
+*   `--traj1 <filepath>`: Path to the CSV trajectory file for the first object. (See "Trajectory File Format" below).
+*   `--traj2 <filepath>`: Path to the CSV trajectory file for the second object. (See "Trajectory File Format" below).
+*   `--output <filepath>`: Path for the output CSV results file. (See "Output CSV Format" below).
+*   `--visualize`: (Optional) If set, enables GUI visualization of the URDFs, their movement along trajectories, and collision checks. The PyBullet window will open and display the scene. Close the window to exit the program after visualization.
 
-### Examples
+### Example
 
-1.  Check collision between a sphere and a box, placing them slightly separated along the Z-axis:
-    ```bash
-    python collision_checker.py urdf_files/sphere.urdf urdf_files/box.urdf --pos1 0 0 0.6 --pos2 0 0 -0.6
-    ```
-    (Assuming sphere radius is 0.5 and box half-height is 0.5, this should result in no collision with a distance of 0.2)
+Process trajectories for a sphere and a box, visualize the interaction, and save results:
+```bash
+python collision_checker.py urdf_files/sphere.urdf urdf_files/box.urdf --traj1 trajectories/sphere_trajectory.csv --traj2 trajectories/box_trajectory.csv --output results.csv --visualize
+```
 
-2.  Check collision between the L-shaped object and a sphere, placing the sphere within the L-shape's concave region and rotating the L-shape 90 degrees around Z-axis:
-    ```bash
-    python collision_checker.py urdf_files/l_shape.urdf urdf_files/sphere.urdf --pos1 0 0 0 --orn1 0 0 0.7071 0.7071 --pos2 0.5 0.5 0.5
-    ```
+## Trajectory File Format
+
+Input trajectory files must be CSV files with the following header and data format:
+
+*   **Header:** `time,x,y,z,qx,qy,qz,qw`
+*   **Data Rows:**
+    *   `time`: (float) Timestamp in seconds. Trajectory files are expected to be sorted by time, though the loader includes a sort step.
+    *   `x,y,z`: (float) Position coordinates of the object's base link origin.
+    *   `qx,qy,qz,qw`: (float) Orientation quaternion (X, Y, Z, W - scalar last) for the object's base link. PyBullet uses this order for `resetBasePositionAndOrientation`.
+
+## Output CSV Format
+
+The output CSV file generated by the `--output` argument will have the following format:
+
+*   **Header:** `time,is_collision,closest_distance`
+*   **Data Rows:**
+    *   `time`: (float) Timestamp from the master list of unique input timestamps, representing the moment of the collision check.
+    *   `is_collision`: (integer) `1` if a collision is detected at this timestamp, `0` otherwise.
+    *   `closest_distance`: (float) The closest distance found between the two objects at this timestamp. Negative values indicate penetration depth. A value of `0.0` typically means the objects are touching. Positive values indicate separation.
 
 ## Running Tests
 
