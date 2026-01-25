@@ -93,6 +93,26 @@ class TestNonConvexCollisions(TestCollisionChecker):
         )
         self.assertTrue(is_collision)
 
+    def test_lshape_concavity_check(self):
+        """
+        Verify that placing a small object inside the concave empty space
+        of the L-shape does NOT trigger a collision.
+        This ensures the collision shape is not a convex hull.
+        """
+        l_shape_urdf = self.rel_path_urdf("l_shape.urdf")
+        small_sphere_urdf = self.rel_path_test_data("small_sphere.urdf")
+
+        # Place L-shape at origin
+        # Place small sphere (r=0.2) at (1.5, 1.5, 0.5)
+        # The L-shape hole is roughly at [1,2]x[1,2].
+        # The sphere fits inside without touching walls (which are at x=1 and y=1).
+        is_collision, distance, _, _ = perform_collision_check_logic(
+            l_shape_urdf, [0,0,0], [0,0,0,1],
+            small_sphere_urdf, [1.5, 1.5, 0.5], [0,0,0,1],
+            self.physics_client_id
+        )
+        self.assertFalse(is_collision, "Collision detected in concave region! L-shape might be acting as convex hull.")
+
 class TestTrajectoryFunctions(unittest.TestCase):
 
     def setUp(self):
