@@ -12,7 +12,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="l_shape.obj" scale="1 1 1"/>
+        <mesh filename="l_shape_vhacd.obj" scale="1 1 1"/>
       </geometry>
     </collision>
   </link>
