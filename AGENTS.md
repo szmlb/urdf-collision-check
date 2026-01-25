@@ -13,7 +13,8 @@ Ensure you have installed dependencies from `requirements.txt`.
 ## Project Structure
 - `collision_checker.py`: Main script and logic.
 - `urdf_files/`: Contains URDF models and meshes.
-  - **Note on Non-Convex Meshes**: PyBullet's `loadURDF` creates convex hulls for meshes by default. For concave objects (like `l_shape.urdf`), use a decomposed mesh (generated via VHACD) referenced in the `<collision>` section of the URDF. See `l_shape.urdf` and `l_shape_vhacd.obj` for an example.
+  - **Note on Non-Convex Meshes**: PyBullet's `loadURDF` creates convex hulls for meshes by default. For concave objects (like `l_shape.urdf`), use a decomposed mesh (generated via VHACD) referenced in the `<collision>` section of the URDF. See `l_shape.urdf` and `l_shape_vhacd.obj` for an example. Use `utils/generate_vhacd.py` to generate these meshes.
+- `utils/`: Utility scripts (e.g., `generate_vhacd.py`).
 - `tests/`: Unit tests.
 - `trajectories/`: Example trajectory CSV files.
 
@@ -23,4 +24,4 @@ Ensure you have installed dependencies from `requirements.txt`.
 - When modifying URDFs or meshes, verify collision shapes using the visualization mode (`--visualize`) or specific tests.
 
 ## Known Issues / Tips
-- If you add a new concave URDF, you MUST generate a convex decomposition (e.g., using `p.vhacd` or Blender) and update the URDF to point to it for collision. Do not rely on `loadURDF` to handle concave meshes automatically for dynamic objects.
+- If you add a new concave URDF, you MUST generate a convex decomposition (e.g., using `utils/generate_vhacd.py`) and update the URDF to point to it for collision. Do not rely on `loadURDF` to handle concave meshes automatically for dynamic objects.
