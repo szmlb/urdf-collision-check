@@ -93,7 +93,33 @@ python tests/test_collision_checker.py
 
 *   The collision geometry for an object is defined within its URDF file using the `<collision>` tag. This geometry is what PyBullet uses for collision detection calculations.
 *   Simple primitive shapes (box, sphere, cylinder, capsule) can be directly defined within the `<geometry>` tag inside `<collision>`.
-*   For non-convex shapes or more complex models, you should use a mesh file. This is specified using the `<mesh filename="path/to/your/mesh.obj"/>` element within `<collision><geometry>`. Supported mesh formats include OBJ, STL, and Collada (DAE). The provided `l_shape.urdf` and `l_shape.obj` files demonstrate this approach for a non-convex L-shape. Ensure that the mesh normals are defined correctly for accurate collision detection.
+*   For non-convex shapes or more complex models, you should use a mesh file. This is specified using the `<mesh filename="path/to/your/mesh.obj"/>` element within `<collision><geometry>`. Supported mesh formats include OBJ, STL, and Collada (DAE).
+
+### Handling Non-Convex (Concave) Shapes
+
+PyBullet's `loadURDF` function, used by this tool, creates **convex hulls** for collision meshes by default. This means that if you load a concave object (like an L-shape or a cup), the "empty" space will be treated as solid for collision purposes.
+
+To correctly handle concave shapes, you must perform a **convex decomposition** of the mesh (splitting it into smaller convex parts). This tool provides a utility script to generate a decomposed mesh using VHACD (Volumetric Hierarchical Approximate Convex Decomposition).
+
+#### 1. Generate the decomposed mesh
+Use the `utils/generate_vhacd.py` script:
+```bash
+python utils/generate_vhacd.py path/to/original.obj path/to/decomposed_vhacd.obj
+```
+
+#### 2. Update your URDF
+In your URDF file, point the `<collision>` geometry to the **decomposed** mesh file, while keeping the `<visual>` geometry pointing to the original mesh if desired.
+
+Example (`l_shape.urdf`):
+```xml
+<collision>
+  <geometry>
+    <mesh filename="l_shape_vhacd.obj" scale="1 1 1"/>
+  </geometry>
+</collision>
+```
+
+The repository includes `l_shape.urdf` and `l_shape_vhacd.obj` as a working example of this setup.
 
 ---
 This README provides a comprehensive guide for users and developers of the URDF Collision Checker.
